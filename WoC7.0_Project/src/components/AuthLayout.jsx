@@ -4,15 +4,21 @@ import { useNavigate } from 'react-router-dom';
 
 export default function AuthLayout({ children, authentication = true }) {
     const navigate = useNavigate();
-    const authStatus = useSelector((state) => state.auth.status); // Get auth status from Redux
+    const authStatus = useSelector((state) => state.auth.status); 
     const [loader, setLoader] = useState(true);
 
     useEffect(() => {
-        if (authentication && !authStatus) {
-            navigate("/login"); // Redirect to login if not authenticated
+        if (authentication) {
+            if (!authStatus) {
+                navigate("/login", { replace: true }); 
+            }
+        } else {
+            if (authStatus) {
+                navigate("/ide", { replace: true }); 
+            }
         }
         setLoader(false);
     }, [authStatus, navigate, authentication]);
 
-    return loader ? <h1>Loading...</h1> : <>{children}</>;
+    return loader ? null : <>{children}</>; 
 }

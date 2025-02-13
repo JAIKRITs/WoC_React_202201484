@@ -15,29 +15,84 @@ import { basicLight } from "@uiw/codemirror-theme-basic";
 import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
 import { dracula } from "@uiw/codemirror-theme-dracula";
 import { solarizedLight, solarizedDark } from "@uiw/codemirror-theme-solarized";
-import { lineNumbers } from "@codemirror/view";
+import { lineNumbers, EditorView } from "@codemirror/view";
 import { autocompletion } from "@codemirror/autocomplete";
+import { LANGUAGE_DATA } from "./utils";
 import Terminal from "../components/Terminal";
 import AIChat from "../components/AIChat";
-import Navbar from "../components/Navbar";
-import { LANGUAGE_DATA } from "./utils";
-import { Rnd } from "react-rnd"; // Import Rnd from react-rnd
+import { Rnd } from "react-rnd";
+import axios from "axios";
+import { motion } from "framer-motion"; // Import framer-motion for animations
 
 function IDE() {
-  const [code, setCode] = useState("");
-  const [language, setLanguage] = useState("javascript");
-  const [theme, setTheme] = useState("oneDark");
+  const [language, setLanguage] = useState(localStorage.getItem("language") || "javascript");
+  const [theme, setTheme] = useState(localStorage.getItem("theme") || "oneDark");
   const [isWrappingEnabled, setIsWrappingEnabled] = useState(false);
   const [isTerminalVisible, setIsTerminalVisible] = useState(false);
   const [isAIChatVisible, setIsAIChatVisible] = useState(false);
+  const [output, setOutput] = useState("");
+  const [codeInput, setCodeInput] = useState("");
+  const handleDownloadCode = () => {
+    const fileExtensions = {
+      javascript: "js",
+      python: "py",
+      html: "html",
+      css: "css",
+      java: "java",
+      cpp: "cpp",
+      php: "php",
+      rust: "rs",
+      sql: "sql",
+      xml: "xml",
+    };
 
-  // Set initial code snippet based on the selected language
+    const fileExtension = fileExtensions[language] || "txt"; // Default to .txt if no match
+    const fileName = `code.${fileExtension}`;
+    const blob = new Blob([code], { type: "text/plain;charset=utf-8" });
+
+    // Create a temporary link element
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName;
+
+    // Trigger the download
+    link.click();
+
+    // Cleanup
+    URL.revokeObjectURL(link.href);
+  };
+  // Load the code for the selected language from localStorage
+  const [code, setCode] = useState(() => {
+    const savedCode = localStorage.getItem(`code_${language}`);
+    if (savedCode) return savedCode;
+
+    const defaultSnippet = LANGUAGE_DATA.find((lang) => lang.language === language)?.codeSnippet;
+    return defaultSnippet || "";
+  });
+
+  // Save language, theme, and code in localStorage on change
   useEffect(() => {
-    const selectedLanguage = LANGUAGE_DATA.find((lang) => lang.language === language);
-    if (selectedLanguage) {
-      setCode(selectedLanguage.codeSnippet);
-    }
-  }, [language]);
+    localStorage.setItem("language", language);
+    localStorage.setItem("theme", theme);
+  }, [language, theme]);
+
+  // Update code snippet when the language changes manually
+  const handleLanguageChange = (newLanguage) => {
+    // Save the current code for the previous language
+    localStorage.setItem(`code_${language}`, code);
+
+    // Update the language
+    setLanguage(newLanguage);
+
+    // Load the default snippet for the new language
+    const defaultSnippet = LANGUAGE_DATA.find((lang) => lang.language === newLanguage)?.codeSnippet;
+    setCode(defaultSnippet || "");
+  };
+
+  // Save the code for the current language on change
+  useEffect(() => {
+    localStorage.setItem(`code_${language}`, code);
+  }, [code, language]);
 
   const onChange = useCallback((value) => {
     setCode(value);
@@ -91,91 +146,178 @@ function IDE() {
     }
   };
 
-  return (
-    <div className="flex flex-col h-screen">
-      {/* <Navbar /> */}
+  const executeCode = async () => {
+    try {
+      const languageData = LANGUAGE_DATA.find((lang) => lang.language === language);
+      if (!languageData) {
+        setOutput("Language not supported.");
+        return;
+      }
 
-      {/* Top Bar */}
-      <div className="flex items-center justify-between p-4 bg-gray-800 text-white">
-        {/* Terminal Toggle Button */}
-        <button
-          onClick={() => setIsTerminalVisible((prev) => !prev)}
-          className="p-2 hover:bg-gray-700 rounded-md transition-colors"
-        >
-          <span className="material-icons">terminal</span>
-        </button>
+      const response = await axios.post("https://winter-of-code-react-js.vercel.app/code/execute-code", {
+        language: language,
+        version: languageData.version,
+        sourceCode: code,
+        codeInput: codeInput,
+      });
+
+      setOutput(response.data.output);
+    } catch (error) {
+      setOutput(error.response?.data?.output || "An error occurred while executing the code.");
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-screen bg-gray-900 text-white">
+      <div className="flex items-center justify-between p-4 bg-gray-800 shadow-lg">
+      {/* Group Terminal, Language Selector, and Theme Selector together */}
+          <motion.div
+          className="flex items-center space-x-4"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          >
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setIsTerminalVisible((prev) => !prev)}
+            className="p-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-all duration-300"
+          >
+            <span className="material-icons text-white">Terminal</span>
+          </motion.button>
 
         {/* Language Selector */}
-        <select
-          value={language}
-          onChange={(e) => setLanguage(e.target.value)}
-          className="p-2 bg-gray-700 rounded-md"
-        >
-          {LANGUAGE_DATA.map((lang) => (
-            <option key={lang.language} value={lang.language}>
-              {lang.language.toUpperCase()}
-            </option>
-          ))}
-        </select>
-
-        {/* Theme Selector */}
-        <select
-          value={theme}
-          onChange={(e) => setTheme(e.target.value)}
-          className="p-2 bg-gray-700 rounded-md"
-        >
-          <option value="oneDark">One Dark</option>
-          <option value="basicLight">Basic Light</option>
-          <option value="githubLight">GitHub Light</option>
-          <option value="githubDark">GitHub Dark</option>
-          <option value="dracula">Dracula</option>
-          <option value="solarizedLight">Solarized Light</option>
-          <option value="solarizedDark">Solarized Dark</option>
-        </select>
-
-        {/* Run Code Button */}
-        <button
-          onClick={() => console.log("Running code:", code)}
-          className="p-2 bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+        <motion.select
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            value={language}
+            onChange={(e) => handleLanguageChange(e.target.value)}
+            className="p-2 bg-gray-700 rounded-md text-white focus:outline-none"
+          >
+            {LANGUAGE_DATA.map((lang) => (
+              <option key={lang.language} value={lang.language}>
+                {lang.language.toUpperCase()}
+              </option>
+            ))}
+          </motion.select>
+          <motion.select
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            value={theme}
+            onChange={(e) => setTheme(e.target.value)}
+            className="p-2 bg-gray-700 rounded-md text-white focus:outline-none"
+          >
+            <option value="oneDark">One Dark</option>
+            <option value="basicLight">Basic Light</option>
+            <option value="githubLight">GitHub Light</option>
+            <option value="githubDark">GitHub Dark</option>
+            <option value="dracula">Dracula</option>
+            <option value="solarizedLight">Solarized Light</option>
+            <option value="solarizedDark">Solarized Dark</option>
+          </motion.select>
+        </motion.div>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={executeCode}
+          className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-md hover:from-blue-700 hover:to-purple-700 transition-all duration-300"
         >
           Run Code
-        </button>
+        </motion.button>
 
-        {/* Toggle Line Wrapping Button */}
-        <button
-          onClick={() => setIsWrappingEnabled((prev) => !prev)}
-          className="p-2 bg-green-600 hover:bg-green-700 rounded-md transition-colors"
+      {/* Group Enable Wrapping and Download Buttons together */}
+      <motion.div
+          className="flex items-center space-x-4"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
         >
-          {isWrappingEnabled ? "Disable Wrapping" : "Enable Wrapping"}
-        </button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setIsWrappingEnabled((prev) => !prev)}
+            className="p-2 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-md hover:from-green-700 hover:to-teal-700 transition-all duration-300"
+          >
+            {isWrappingEnabled ? "Disable Wrapping" : "Enable Wrapping"}
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleDownloadCode}
+            className="p-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-md hover:from-purple-700 hover:to-pink-700 transition-all duration-300"
+          >
+            <svg
+              width="24px"
+              height="24px"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                opacity="0.5"
+                d="M3 15C3 17.8284 3 19.2426 3.87868 20.1213C4.75736 21 6.17157 21 9 21H15C17.8284 21 19.2426 21 20.1213 20.1213C21 19.2426 21 17.8284 21 15"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M12 3V16M12 16L16 11.625M12 16L8 11.625"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </motion.button>
+        </motion.div>
       </div>
 
       {/* CodeMirror Editor */}
-      <CodeMirror
-        value={code}
-        height="calc(100vh - 64px)"
-        width="100%"
-        extensions={[getLanguageExtension(), lineNumbers(), autocompletion()]}
-        theme={getTheme()}
-        onChange={onChange}
-        basicSetup={{
-          lineWrapping: isWrappingEnabled,
-        }}
-      />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="flex-grow"
+      >
+        <CodeMirror
+          value={code}
+          height="calc(100vh - 64px)"
+          width="100%"
+          extensions={[
+            getLanguageExtension(),
+            lineNumbers(),
+            autocompletion(),
+            isWrappingEnabled ? EditorView.lineWrapping : [],
+          ]}
+          theme={getTheme()}
+          onChange={onChange}
+        />
+      </motion.div>
 
       {/* Terminal */}
       {isTerminalVisible && (
-        <div className="fixed bottom-0 left-0 w-full bg-black p-4">
-          <Terminal onClose={() => setIsTerminalVisible(false)} />
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="fixed bottom-0 left-0 w-full bg-black p-4 shadow-lg"
+        >
+          <Terminal
+            onClose={() => setIsTerminalVisible(false)}
+            output={output}
+            onInputChange={(input) => setCodeInput(input)}
+          />
+        </motion.div>
       )}
 
-
       {/* AI Chat Button */}
-      {!isAIChatVisible && ( // Conditionally render the button
-        <button
-          onClick={() => setIsAIChatVisible(true)} // Open AI Chat
-          className="fixed bottom-6 right-6 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+      {!isAIChatVisible && (
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => setIsAIChatVisible(true)}
+          className="fixed bottom-6 right-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 rounded-full shadow-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300"
         >
           <svg
             height="24px"
@@ -216,27 +358,23 @@ function IDE() {
               />
             </g>
           </svg>
-        </button>
+        </motion.button>
       )}
 
       {/* AI Chat */}
       {isAIChatVisible && (
         <Rnd
           default={{
-            x: window.innerWidth - 400, // Initial X position (right side)
-            y: window.innerHeight - 500, // Initial Y position (bottom side)
-            width: 350, // Initial width
-            height: 450, // Initial height
+            x: window.innerWidth - 400,
+            y: window.innerHeight - 500,
+            width: 350,
+            height: 450,
           }}
-          minWidth={300} // Minimum width
-          minHeight={400} // Minimum height
-          bounds="window" // Restrict dragging within the window
-          enableResizing={{
-            bottom: true,
-            bottomRight: true,
-            right: true,
-          }} // Enable resizing
-          className="z-50" // Ensure it stays on top
+          minWidth={300}
+          minHeight={400}
+          bounds="window"
+          enableResizing={{ bottom: true, bottomRight: true, right: true }}
+          className="z-50"
         >
           <AIChat onClose={() => setIsAIChatVisible(false)} />
         </Rnd>

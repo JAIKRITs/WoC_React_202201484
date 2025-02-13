@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { motion } from "framer-motion";
 
 // Initialize the Google Generative AI model
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_API_KEY);
@@ -10,20 +11,15 @@ const AIChat = ({ onClose }) => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Function to handle sending messages
   const handleSend = async () => {
     if (input.trim()) {
-      // Add the user's message to the chat
       setMessages((prevMessages) => [...prevMessages, `You: ${input}`]);
       setInput("");
       setIsLoading(true);
 
       try {
-        // Call the AI model
         const result = await model.generateContent(input);
         const response = await result.response.text();
-
-        // Add the AI's response to the chat
         setMessages((prevMessages) => [...prevMessages, `AI: ${response}`]);
       } catch (err) {
         console.error(err);
@@ -35,9 +31,13 @@ const AIChat = ({ onClose }) => {
   };
 
   return (
-    <div className="bg-gray-800 text-white p-4 rounded-md w-full max-w-sm shadow-lg">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.3 }}
+      className="bg-gray-800 text-white p-6 rounded-lg w-full max-w-sm shadow-xl border border-gray-700"
+    >
       <div className="flex justify-between items-center mb-4">
-        {/* Replace "AI Chat" text with embedded chat.svg */}
         <div className="flex items-center">
           <svg
             height="24px"
@@ -82,14 +82,14 @@ const AIChat = ({ onClose }) => {
         </div>
         <button
           onClick={onClose}
-          className="text-gray-400 hover:text-white"
+          className="text-gray-400 hover:text-white transition-colors"
         >
           <span className="material-icons">close</span>
         </button>
       </div>
-      <div className="h-40 overflow-y-auto mb-4 bg-gray-900 p-2 rounded">
+      <div className="h-40 overflow-y-auto mb-4 bg-gray-900 p-3 rounded-lg">
         {messages.map((msg, index) => (
-          <p key={index} className="text-sm mb-1">
+          <p key={index} className="text-sm mb-2">
             {msg}
           </p>
         ))}
@@ -102,19 +102,21 @@ const AIChat = ({ onClose }) => {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          className="flex-grow px-4 py-2 rounded bg-gray-700 text-white focus:outline-none"
+          className="flex-grow px-4 py-2 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="Type a message..."
           disabled={isLoading}
         />
-        <button
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={handleSend}
-          className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-500 disabled:bg-blue-400"
+          className="bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300"
           disabled={isLoading}
         >
           Send
-        </button>
+        </motion.button>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

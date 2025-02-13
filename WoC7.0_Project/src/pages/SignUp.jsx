@@ -2,8 +2,11 @@ import React, { useState } from 'react';
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { FaGoogle } from 'react-icons/fa';
-import firebaseAuthService from '../Firebase/firebaseAuth'; // Importing the firebase auth service
-import { useNavigate } from 'react-router-dom'; // For navigation between pages
+import firebaseAuthService from '../Firebase/firebaseAuth';
+import { useNavigate } from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { motion } from 'framer-motion';
 
 const SignUpPage = () => {
   const [formData, setFormData] = useState({
@@ -11,7 +14,7 @@ const SignUpPage = () => {
     email: '',
     password: '',
     rememberMe: false,
-    errorMessage: ''
+    errorMessage: '',
   });
 
   const navigate = useNavigate();
@@ -20,7 +23,7 @@ const SignUpPage = () => {
     const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? checked : value,
     });
   };
 
@@ -31,8 +34,30 @@ const SignUpPage = () => {
     try {
       const user = await firebaseAuthService.signUp({ email, password });
       console.log('User signed up successfully:', user);
+
+      toast.success('Successfully Signed Up! Redirecting...', {
+        position: "top-center",
+        autoClose: 1000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "dark",
+      });
+
+      setTimeout(() => navigate('/login'), 2000);
     } catch (error) {
-      setFormData({ ...formData, errorMessage: error.message });
+      console.error('Sign up error:', error.message);
+
+      toast.error(`Sign-Up Failed: ${error.message}`, {
+        position: "top-center",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "dark",
+      });
     }
   };
 
@@ -40,23 +65,47 @@ const SignUpPage = () => {
     try {
       const user = await firebaseAuthService.signInWithGoogle();
       console.log('User signed in with Google:', user);
+
+      toast.success('Signed In via Google!', {
+        position: "top-center",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "dark",
+      });
+
+      setTimeout(() => navigate('/login'), 2000);
     } catch (error) {
-      setFormData({ ...formData, errorMessage: error.message });
+      console.error('Google sign-in error:', error.message);
+
+      toast.error(`Google Sign-In Failed: ${error.message}`, {
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "dark",
+      });
     }
   };
 
   return (
     <div className="bg-gray-900 min-h-screen text-white flex flex-col">
-      {/* <Navbar /> */}
-      <main className="flex-grow flex items-center justify-center p-8">
-        <div className="bg-gray-800 p-8 rounded-lg w-full max-w-md shadow-lg">
-          <h2 className="text-3xl font-semibold text-center mb-6">Sign Up</h2>
+      <ToastContainer />
 
-          {formData.errorMessage && (
-            <div className="bg-red-600 text-white p-3 rounded-lg mb-4">
-              {formData.errorMessage}
-            </div>
-          )}
+      <main className="flex-grow flex items-center justify-center p-8">
+        <motion.div
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="bg-gray-800 p-8 rounded-lg w-full max-w-md shadow-lg border border-gray-700"
+        >
+          <h2 className="text-3xl font-semibold text-center mb-6 bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
+            Sign Up
+          </h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -67,7 +116,7 @@ const SignUpPage = () => {
                 name="username"
                 value={formData.username}
                 onChange={handleInputChange}
-                className="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                 required
               />
             </div>
@@ -80,7 +129,7 @@ const SignUpPage = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                 required
               />
             </div>
@@ -93,39 +142,32 @@ const SignUpPage = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                 required
               />
             </div>
 
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="rememberMe"
-                name="rememberMe"
-                checked={formData.rememberMe}
-                onChange={handleInputChange}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-              />
-              <label htmlFor="rememberMe" className="ml-2 text-sm">Remember Me</label>
-            </div>
 
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               type="submit"
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition duration-300"
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-300"
             >
               Sign Up
-            </button>
+            </motion.button>
           </form>
 
           <div className="mt-4 text-center">
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={handleGoogleSignIn}
-              className="flex items-center justify-center w-full bg-gradient-to-r from-green-400 to-blue-500 text-white py-2 rounded-full shadow-lg hover:from-green-500 hover:to-blue-600 transition duration-300"
+              className="flex items-center justify-center w-full bg-gradient-to-r from-green-400 to-blue-500 text-white py-2 rounded-full shadow-lg hover:from-green-500 hover:to-blue-600 transition-all duration-300"
             >
               <FaGoogle className="mr-2" />
               Sign In via Google
-            </button>
+            </motion.button>
           </div>
 
           <div className="mt-6 text-center">
@@ -139,7 +181,7 @@ const SignUpPage = () => {
               </span>
             </p>
           </div>
-        </div>
+        </motion.div>
       </main>
       <Footer />
     </div>
