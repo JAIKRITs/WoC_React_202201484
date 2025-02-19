@@ -227,47 +227,55 @@ const FileStructure = ({ userId, onClose, onFileSelect,currentFileId, onCreateFi
   
               return (
                 <div
-                  key={file.id}
-                  className={`flex items-center justify-between p-3 rounded-lg transition-all duration-200 mb-2 ${
-                    currentFileId === file.id ? 'bg-blue-600' : 'hover:bg-blue-600'
-                  }`}
-                  onClick={() => handleFileClick(file)} // Handle file click
-                >
-                  {/* Language Icon and File Name */}
-                  <div className="flex items-center space-x-2">
-                    {iconUrl && (
-                      <img
-                        src={iconUrl}
-                        alt={file.language}
-                        className="h-5 w-5"
-                      />
-                    )}
-                    <span className="text-gray-300 font-medium text-lg">{file.name}</span>
-                  </div>
-  
-                  {/* Rename and Delete Buttons */}
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setCurrentFile(file.id);
-                        setIsModalOpen(true);
-                      }}
-                      className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm"
-                    >
-                      <RenameIcon />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteFile(file.id);
-                      }}
-                      className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm"
-                    >
-                      <DeleteIcon />
-                    </button>
-                  </div>
+                key={file.id}
+                className={`flex items-center justify-between p-3 rounded-lg transition-all duration-200 mb-2 ${
+                  currentFileId === file.id 
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600' 
+                    : 'bg-gray-800 hover:bg-gradient-to-r hover:from-blue-600/50 hover:to-purple-600/50'
+                }`}
+                onClick={() => handleFileClick(file)}
+              >
+                {/* Language Icon and File Name */}
+                <div className="flex items-center space-x-2">
+                  {iconUrl && (
+                    <img
+                      src={iconUrl}
+                      alt={file.language}
+                      className="h-5 w-5"
+                    />
+                  )}
+                  <span className={`text-gray-300 font-medium text-lg ${
+                    currentFileId === file.id 
+                      ? 'text-white' 
+                      : 'hover:text-white transition-colors duration-200'
+                  }`}>
+                    {file.name}
+                  </span>
                 </div>
+
+                {/* Rename and Delete Buttons */}
+                <div className="flex space-x-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentFile(file.id);
+                      setIsModalOpen(true);
+                    }}
+                    className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm transition-all duration-200 hover:scale-105"
+                  >
+                    <RenameIcon />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteFile(file.id);
+                    }}
+                    className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition-all duration-200 hover:scale-105"
+                  >
+                    <DeleteIcon />
+                  </button>
+                </div>
+              </div>
               );
             })
           )}
