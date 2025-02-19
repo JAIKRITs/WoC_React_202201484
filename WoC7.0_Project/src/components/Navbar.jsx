@@ -1,4 +1,5 @@
-import React from "react";
+// components/Navbar.jsx
+import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../store/authSlice";
@@ -6,11 +7,32 @@ import firebaseAuthService from "../Firebase/firebaseAuth";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { motion } from "framer-motion";
+import LogoutModal from "./LogoutModal";
 
 const Navbar = () => {
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [profileImage, setProfileImage] = useState("/default-profile.png");
   const authStatus = useSelector((state) => state.auth.status);
+  const userData = useSelector((state) => state.auth.userData);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const getProfileImage = () => {
+    if (userData && userData.photoURL) {
+      return userData.photoURL;
+    }
+    return "/default-profile.png"; // Fallback default profile image
+  };
+  
+
+  // Update profile image when userData changes
+  useEffect(() => {
+    if (userData?.photoURL) {
+      setProfileImage(userData.photoURL);
+    } else {
+      setProfileImage("/default-profile.png");
+    }
+  }, [userData]);
 
   const handleLogout = async () => {
     try {
@@ -31,7 +53,6 @@ const Navbar = () => {
       navigate("/");
     } catch (error) {
       console.error("Error logging out: ", error);
-
       toast.error("Failed to log out. Please try again.", {
         position: "top-center",
         autoClose: 2000,
@@ -98,17 +119,37 @@ const Navbar = () => {
                 </motion.a>
               </>
             ) : (
-              <motion.button
-                onClick={handleLogout}
-                className="text-lg font-medium px-8 py-3 rounded-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white transition-all duration-300 hover:shadow-lg hover:scale-105"
+              <motion.div
                 whileHover={{ scale: 1.05 }}
+                className="relative"
               >
-                Logout
-              </motion.button>
+                <button
+                  onClick={() => setShowLogoutModal(true)}
+                  className="w-12 h-12 rounded-full overflow-hidden border-2 border-purple-500 hover:border-purple-400 transition-all duration-200"
+                >
+                <img
+                  src={getProfileImage()}
+                  alt="Profile"
+                  className="w-full h-full object-cover rounded-full"
+                  onError={(e) => {
+                    e.target.src = "/default-profile.png"; // Fallback image
+                    e.target.classList.add("p-1"); // Optional padding to fit better
+                  }}
+                />
+                </button>
+              </motion.div>
             )}
           </div>
         </div>
       </motion.nav>
+      
+      {showLogoutModal && (
+        <LogoutModal
+          onCancel={() => setShowLogoutModal(false)}
+          onLogout={handleLogout}
+        />
+      )}
+      
       <ToastContainer />
     </>
   );

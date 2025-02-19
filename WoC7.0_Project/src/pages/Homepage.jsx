@@ -52,49 +52,49 @@ const HomePage = () => {
           <ul className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {[
               {
-                title: "Real-time Collaboration",
-                description: "Collaborate with your team in real time, from anywhere.",
-                icon: "👥"
+                title: "Multi-language Support",
+                description: "Write and execute code in various languages including JavaScript, Python, Java, and more.",
+                icon: "💻"
               },
               {
-                title: "Code Execution",
-                description: "Run your code instantly with support for multiple languages.",
-                icon: "🚀"
+                title: "Real-time Code Execution",
+                description: "Run your code instantly and see the output in real-time.",
+                icon: "⚡"
               },
               {
-                title: "Syntax Highlighting",
-                description: "Enjoy rich syntax highlighting for better readability.",
-                icon: "🌈"
+                title: "Integrated Code Editor",
+                description: "Enjoy a powerful code editor with syntax highlighting and autocompletion.",
+                icon: "✍️"
               },
               {
-                title: "File Management",
-                description: "Save, organize, and access your code files easily.",
-                icon: "📂"
-              },
-              {
-                title: "Version Control",
-                description: "Track changes and manage versions of your code effortlessly.",
-                icon: "🔄"
-              },
-              {
-                title: "Cloud Storage",
-                description: "Store your projects securely in the cloud and access them anytime.",
-                icon: "☁️"
+                title: "File Management System",
+                description: "Easily create, upload, and manage your code files in the cloud.",
+                icon: "📁"
               },
               {
                 title: "Customizable Themes",
-                description: "Personalize your IDE with light and dark themes.",
+                description: "Choose from various themes to personalize your coding environment.",
                 icon: "🎨"
               },
               {
-                title: "Integrated Debugger",
-                description: "Debug your code with an intuitive and powerful debugging tool.",
-                icon: "🐛"
+                title: "Terminal Integration",
+                description: "Access a built-in terminal for executing commands and scripts.",
+                icon: "🖥️"
               },
               {
-                title: "API Integration",
-                description: "Integrate APIs and third-party services seamlessly.",
-                icon: "🔗"
+                title: "AI Code Assistance",
+                description: "Get help with coding through our integrated AI chat feature.",
+                icon: "🤖"
+              },
+              {
+                title: "Version Control",
+                description: "Keep track of changes and manage different versions of your code.",
+                icon: "🔄"
+              },
+              {
+                title: "Collaborative Features",
+                description: "Work together with your team in real-time on shared projects.",
+                icon: "👥"
               }
             ].map((feature, index) => (
               <li

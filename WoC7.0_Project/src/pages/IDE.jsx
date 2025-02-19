@@ -145,6 +145,10 @@ function IDE() {
     }
   }, [initialLoadComplete, files.length, dispatch]);
   
+  const clearOutput = () => {
+    setOutput(""); // Clear the output state
+  };
+
   useEffect(() => {
     if (currentFileId) {
       localStorage.setItem('lastFileId', currentFileId);
@@ -338,20 +342,21 @@ function IDE() {
   };
 
   const executeCode = async () => {
+    setIsTerminalVisible(true); // Open the terminal when running code
     try {
       const languageData = LANGUAGE_DATA.find((lang) => lang.language === language);
       if (!languageData) {
         setOutput("Language not supported.");
         return;
       }
-
+  
       const response = await axios.post("https://winter-of-code-react-js.vercel.app/code/execute-code", {
         language: language,
         version: languageData.version,
         sourceCode: code,
         codeInput: codeInput,
       });
-
+  
       setOutput(response.data.output);
     } catch (error) {
       setOutput(error.response?.data?.output || "An error occurred while executing the code.");
@@ -569,6 +574,7 @@ function IDE() {
               onClose={() => setIsTerminalVisible(false)}
               output={output}
               onInputChange={(input) => setCodeInput(input)}
+              onClearOutput={clearOutput} // Pass the clear function
             />
           </div>
         )}

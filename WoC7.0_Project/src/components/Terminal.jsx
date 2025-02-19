@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Resizable } from "react-resizable";
 import "react-resizable/css/styles.css"; // Import the default styles
 
-const Terminal = ({ onClose, output, onInputChange }) => {
+const Terminal = ({ onClose, output, onInputChange, onClearOutput }) => {
   const [input, setInput] = useState(""); // For user input
   const [inputWidth, setInputWidth] = useState(400); // Initial width for input section
   const [terminalHeight, setTerminalHeight] = useState(300); // Initial height for the terminal
@@ -26,6 +26,12 @@ const Terminal = ({ onClose, output, onInputChange }) => {
     }
   };
 
+  // Clear the output
+  const handleClearOutput = () => {
+    onClearOutput(); // Call the function to clear the output in the parent component
+    setInput(""); // Optionally clear the input as well
+  };
+
   return (
     <Resizable
       height={terminalHeight} // Current height of the terminal
@@ -36,15 +42,23 @@ const Terminal = ({ onClose, output, onInputChange }) => {
       maxConstraints={[Infinity, 600]} // Maximum height of 600px
     >
       <div
-        className="bg-gray-800 text-green-400 font-mono p-4 rounded-t-lg flex justify-between relative"
+        className="bg-gray-800 text-green-400 font-mono p-4 rounded-t-lg flex justify-between relative transition-all duration-300 ease-in-out"
         style={{ height: terminalHeight }} // Set the height dynamically
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded-md transition-all duration-300"
+          className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded-md transition-all duration-300 ease-in-out"
         >
           Close
+        </button>
+
+        {/* Clear Button */}
+        <button
+          onClick={handleClearOutput}
+          className="absolute top-2 right-20 bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded-md transition-all duration-300 ease-in-out"
+        >
+          Clear
         </button>
 
         {/* Input Section */}
@@ -57,7 +71,7 @@ const Terminal = ({ onClose, output, onInputChange }) => {
           maxConstraints={[800, terminalHeight]} // Maximum width of 800px
         >
           <div
-            className="mr-4"
+            className="mr-4 transition-all duration-300 ease-in-out"
             style={{ width: inputWidth, height: "100%" }} // Set the width and height dynamically
           >
             <h3 className="text-white mb-2 font-semibold">Input</h3>
@@ -65,14 +79,14 @@ const Terminal = ({ onClose, output, onInputChange }) => {
               value={input}
               onChange={handleInputChange}
               placeholder="Type your input here..."
-              className="w-full h-[calc(100%-40px)] bg-gray-700 text-green-400 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+              className="w-full h-[calc(100%-40px)] bg-gray-700 text-green-400 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 resize-none transition-all duration-300 ease-in-out"
             />
           </div>
         </Resizable>
 
         {/* Output Section */}
         <div
-          className="flex-grow"
+          className="flex-grow transition-all duration-300 ease-in-out"
           style={{
             width: `calc(100% - ${inputWidth + 16}px)`, // Adjust width dynamically
             height: "100%", // Full height
@@ -80,9 +94,9 @@ const Terminal = ({ onClose, output, onInputChange }) => {
         >
           <h3 className="text-white mb-2 font-semibold">Output</h3>
           <div
-            className="w-full h-[calc(100%-40px)] bg-gray-700 text-green-400 p-2 rounded-md overflow-y-auto"
+            className="w-full h-[calc(100%-40px)] bg-gray-700 text-green-400 p-2 rounded-md overflow-y-auto transition-all duration-300 ease-in-out"
           >
-            {output || "No output yet."}
+            {output}
           </div>
         </div>
       </div>

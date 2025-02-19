@@ -34,7 +34,11 @@ const LoginPage = () => {
 
     try {
       const user = await firebaseAuthService.logIn({ email, password });
-      dispatch(login(email));
+      dispatch(login({
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL
+      }));
       console.log('Login successful:', user.displayName || user.email);
 
       toast.success('Login Successful!', {
@@ -68,7 +72,11 @@ const LoginPage = () => {
   const handleGoogleSignIn = async () => {
     try {
       const user = await firebaseAuthService.signInWithGoogle();
-      dispatch(login(user.email));
+      dispatch(login({
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL
+      }));
       console.log('Login successful via Google:', user.displayName || user.email);
 
       toast.success('Login Successful via Google!', {

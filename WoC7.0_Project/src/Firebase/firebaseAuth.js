@@ -30,7 +30,12 @@ async signUp({ email, password }) {
 async logIn({ email, password }) {
     try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    return userCredential.user;
+    const user = userCredential.user;
+    return {
+      email: user.email,
+      displayName: user.displayName || email.split('@')[0],
+      photoURL: user.photoURL || null
+    };
     } catch (error) {
     throw error;
     }
@@ -51,8 +56,12 @@ async signInWithGoogle() {
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
-      window.location.href = "/ide"; // Redirect manually instead of closing window
-      return user;
+      window.location.href = "/ide";
+      return {
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL
+      };
     } catch (error) {
       throw error;
     }

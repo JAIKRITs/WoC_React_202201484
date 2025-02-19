@@ -13,7 +13,7 @@ const Footer = () => {
           &copy; {new Date().getFullYear()} Codepad. All rights reserved.
         </p>
         <p className="text-xs mt-2 text-gray-500">
-          Made with ❤️ by the Jaikrit
+          Made with ❤️ by Jaikrit
         </p>
       </div>
     </motion.footer>

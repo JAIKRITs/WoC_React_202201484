@@ -16,6 +16,23 @@ const DeleteIcon = () => (
   <img src="/delete.svg" alt="Delete" className="h-5 w-5" />
 );
 
+const CancelIcon = ({ onClick }) => (
+  <svg
+    onClick={onClick}
+    className="absolute right-3 top-3 h-5 w-5 text-gray-500 cursor-pointer hover:text-gray-300"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M6 18L18 6M6 6l12 12"
+    />
+  </svg>
+);
+
 const FileStructure = ({ userId, onClose, onFileSelect,currentFileId, onCreateFile}) => {
   const dispatch = useDispatch();
   const isLoading = useSelector((state) => state.loader.isLoading);
@@ -24,14 +41,20 @@ const FileStructure = ({ userId, onClose, onFileSelect,currentFileId, onCreateFi
   const [currentFile, setCurrentFile] = useState("");
   const [newFileName, setNewFileName] = useState("");
   const [newFileLanguage, setNewFileLanguage] = useState("javascript");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Filter files based on search query
+  const filteredFiles = files.filter(file => 
+    file.name.toLowerCase().startsWith(searchQuery.toLowerCase().trim())
+  );
 
   // Load files from Firestore
   useEffect(() => {
     const loadFiles = async () => {
       dispatch(showLoader()); // Show loader
       try {
-        const files = await getFiles(userId);
-        dispatch(setFiles(files));
+        // Use fetchFiles action to load files and update Redux state
+        await dispatch(fetchFiles({ userId }));
       } catch (error) {
         console.error("Error loading files:", error);
       } finally {
@@ -52,7 +75,7 @@ const FileStructure = ({ userId, onClose, onFileSelect,currentFileId, onCreateFi
       dispatch(fetchFiles({ userId }));
     }
   }, [userId, dispatch]);
-  
+
   // Add a new file
   const handleAddFile = async () => {
     const fileName = prompt("Enter the new file name:");
@@ -163,41 +186,92 @@ const FileStructure = ({ userId, onClose, onFileSelect,currentFileId, onCreateFi
         </label>
       </div>
 
-      {/* File List (Scrollable) */}
-      {!isLoading &&(<div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900 px-4">
-        {files.map((file) => (
-          <div
-            key={file.id}
-            className={`flex items-center justify-between p-3 rounded-lg transition-all duration-200 mb-2 ${
-              currentFileId === file.id ? 'bg-blue-600' : 'hover:bg-blue-600'
-            }`}
-            onClick={() => handleFileClick(file)} // Handle file click
+      {/* Search Bar */}
+      <div className="px-4 py-2">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search files..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full p-2 pl-10 pr-10 bg-gray-800 text-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <svg 
+            className="absolute left-3 top-3 h-5 w-5 text-gray-500"
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
           >
-            <span className="text-gray-300 font-medium text-lg">{file.name}</span>
-            <div className="flex space-x-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCurrentFile(file.id);
-                  setIsModalOpen(true);
-                }}
-                className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm"
-              >
-                <RenameIcon/>
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteFile(file.id);
-                }}
-                className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm"
-              >
-                <DeleteIcon/>
-              </button>
-            </div>
-          </div>
-        ))}
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" 
+            />
+          </svg>
+          {searchQuery && <CancelIcon onClick={() => setSearchQuery("")} />}
+        </div>
       </div>
+
+      {/* File List (Scrollable) */}
+      {!isLoading && (
+        <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900 px-4">
+          {filteredFiles.length === 0 ? (
+            <div className="text-center p-4 text-gray-400">
+              No files found matching "{searchQuery}"
+            </div>
+          ) : (
+            filteredFiles.map((file) => {
+              const languageData = LANGUAGE_DATA.find((lang) => lang.language === file.language);
+              const iconUrl = languageData?.icon || ""; // Get the icon URL for the file's language
+  
+              return (
+                <div
+                  key={file.id}
+                  className={`flex items-center justify-between p-3 rounded-lg transition-all duration-200 mb-2 ${
+                    currentFileId === file.id ? 'bg-blue-600' : 'hover:bg-blue-600'
+                  }`}
+                  onClick={() => handleFileClick(file)} // Handle file click
+                >
+                  {/* Language Icon and File Name */}
+                  <div className="flex items-center space-x-2">
+                    {iconUrl && (
+                      <img
+                        src={iconUrl}
+                        alt={file.language}
+                        className="h-5 w-5"
+                      />
+                    )}
+                    <span className="text-gray-300 font-medium text-lg">{file.name}</span>
+                  </div>
+  
+                  {/* Rename and Delete Buttons */}
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentFile(file.id);
+                        setIsModalOpen(true);
+                      }}
+                      className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm"
+                    >
+                      <RenameIcon />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteFile(file.id);
+                      }}
+                      className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm"
+                    >
+                      <DeleteIcon />
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
       )}
 
       {/* Rename Modal */}

@@ -32,6 +32,11 @@ function IDE() {
   const [isAIChatVisible, setIsAIChatVisible] = useState(false);
   const [output, setOutput] = useState("");
   const [codeInput, setCodeInput] = useState("");
+
+  const clearOutput = () => {
+    setOutput(""); // Clear the output state
+  };
+
   const handleDownloadCode = () => {
     const fileExtensions = {
       javascript: "js",
@@ -147,20 +152,21 @@ function IDE() {
   };
 
   const executeCode = async () => {
+    setIsTerminalVisible(true); // Open the terminal when running code
     try {
       const languageData = LANGUAGE_DATA.find((lang) => lang.language === language);
       if (!languageData) {
         setOutput("Language not supported.");
         return;
       }
-
+  
       const response = await axios.post("https://winter-of-code-react-js.vercel.app/code/execute-code", {
         language: language,
         version: languageData.version,
         sourceCode: code,
         codeInput: codeInput,
       });
-
+  
       setOutput(response.data.output);
     } catch (error) {
       setOutput(error.response?.data?.output || "An error occurred while executing the code.");
@@ -170,21 +176,35 @@ function IDE() {
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white">
       <div className="flex items-center justify-between p-4 bg-gray-800 shadow-lg">
-      {/* Group Terminal, Language Selector, and Theme Selector together */}
-          <motion.div
-          className="flex items-center space-x-4"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          >
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setIsTerminalVisible((prev) => !prev)}
-            className="p-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-all duration-300"
-          >
-            <span className="material-icons text-white">Terminal</span>
-          </motion.button>
+      {/* Group Language Icon, Terminal, Language Selector, and Theme Selector together */}
+      <motion.div
+        className="flex items-center space-x-4"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        {/* Language Icon */}
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="flex items-center space-x-2"
+        >
+          <img
+            src={LANGUAGE_DATA.find((lang) => lang.language === language)?.icon}
+            alt={language}
+            className="h-8 w-8"
+          />
+        </motion.div>
+
+        {/* Terminal Button */}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setIsTerminalVisible((prev) => !prev)}
+          className="p-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-all duration-300"
+        >
+          <span className="material-icons text-white">Terminal</span>
+        </motion.button>
 
         {/* Language Selector */}
         <motion.select
@@ -303,11 +323,12 @@ function IDE() {
           transition={{ duration: 0.5 }}
           className="fixed bottom-0 left-0 w-full bg-black p-4 shadow-lg"
         >
-          <Terminal
-            onClose={() => setIsTerminalVisible(false)}
-            output={output}
-            onInputChange={(input) => setCodeInput(input)}
-          />
+        <Terminal
+          onClose={() => setIsTerminalVisible(false)}
+          output={output}
+          onInputChange={(input) => setCodeInput(input)}
+          onClearOutput={clearOutput} // Pass the clear function
+        />
         </motion.div>
       )}
 
